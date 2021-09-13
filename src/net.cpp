@@ -83,7 +83,7 @@ extern char ASSETCHAINS_SYMBOL[65];
 
 bool fDiscover = true;
 bool fListen = true;
-uint64_t nLocalServices = NODE_NETWORK | NODE_NSPV;
+uint64_t nLocalServices = NODE_NETWORK;
 CCriticalSection cs_mapLocalHost;
 map<CNetAddr, LocalServiceInfo> mapLocalHost;
 static bool vfLimited[NET_MAX] = {};
@@ -444,7 +444,7 @@ void CNode::CloseSocketDisconnect()
         vRecvMsg.clear();
 }
 
-extern int32_t KOMODO_NSPV,KOMODO_DEX_P2P;
+extern int32_t KOMODO_NSPV;
 #ifndef KOMODO_NSPV_FULLNODE
 #define KOMODO_NSPV_FULLNODE (KOMODO_NSPV <= 0)
 #endif // !KOMODO_NSPV_FULLNODE
@@ -1399,7 +1399,7 @@ void ThreadOpenConnections()
             static bool done = false;
             if (!done) {
                 // skip DNS seeds for staked chains.
-                if ( is_STAKED(ASSETCHAINS_SYMBOL) == 0 && KOMODO_DEX_P2P == 0 ) {
+                if ( is_STAKED(ASSETCHAINS_SYMBOL) == 0 ) {
                     //LogPrintf("Adding fixed seed nodes as DNS doesn't seem to be available.\n");
                     LogPrintf("Adding fixed seed nodes.\n");
                     addrman.Add(convertSeed6(Params().FixedSeeds()), CNetAddr("127.0.0.1"));
@@ -1792,6 +1792,12 @@ void static Discover(boost::thread_group& threadGroup)
 
 void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
 {
+
+    if (GetBoolArg("-nspv_msg", DEFAULT_NSPV_PROCESSING)) {
+        nLocalServices |= NODE_NSPV;
+        LogPrintf("NSPV messages processing enabled\n");
+    }
+
     uiInterface.InitMessage(_("Loading addresses..."));
     // Load addresses for peers.dat
     int64_t nStart = GetTimeMillis();
